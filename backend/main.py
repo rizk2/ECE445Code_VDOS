@@ -1,62 +1,70 @@
-import librosa
-import numpy as np
+import librosa 
+import numpy as np 
 import parselmouth 
-import soundfile as sf
+import soundfile as sf 
 import math
-import matplotlib.pyplot as plt
-from fastapi import FastAPI, WebSocket
+import matplotlib.pyplot as plt 
+from fastapi import FastAPI, WebSocket 
 import asyncio
 import json
+import time 
 
 
 app = FastAPI()
-
-audio_file, samplefreq = sf.read("C:\\Users\\mrizk\\Downloads\\vdossample2.wav")
+audio_file, samplefreq = sf.read("C:\\Users\\mrizk\\Downloads\\sentence.wav")
 #print(samplefreq)
-f0_min = 85
-f0_max = 255
 
-'''
-It is important to distinguish possible MIN/MAX for male and female. Implement later
+male = True
+#It is important to distinguish possible MIN/MAX for male and female. Implement later
 if (male):
-    f0_min = ....
-    f0_max = ....
-else #female
-    f0_min = ....
-    f0_max = ....
-'''
+    f0_min = 50
+    f0_max = 300
+else :
+    f0_min = 100
+    f0_max = 400
+
 f0p = None 
 CPPp_values = None 
 chunk_size = 0.050 #Uniform throughout all of the measurements here
 
+start_time = time.time()
 #Fundamental Frequency / Pitch Calculation 
 sound = parselmouth.Sound(audio_file, samplefreq)
 pitch = sound.to_pitch(chunk_size, 85, 255) # Autocorrelation, 50 ms time blocks
 f0 = pitch.selected_array["frequency"]
+end_time = time.time()
+
+print (start_time-end_time)
 
 #SPL
+
+start_time2 = time.time()
 C = 50 #in dB. THis is what they used in Nudelman's code. Pretty sure this is just a calibration constant
 time_length = len(audio_file) * (1/samplefreq)
 chunk_number = math.floor(time_length/chunk_size)
 chunk_num_datapoints = math.floor(len(audio_file)/chunk_number)
+spls = np.empty(chunk_number)
 
-print(time_length)
+def rms_spl(audio_bin, calibration):
+    audio_rms = np.sqrt(np.mean(audio_bin**2))
+    spl_bin = 20*np.log10(audio_rms/ (20 * 10**-5)) + calibration
+    return spl_bin
 
-def rms(audio_points):
-    for x in audio_points:
-        x_bar += x**2
-    
-    x_bar = x_bar/len(audio_points)
-    x_bar = math.sqrt(x_bar)
-    return x_bar
+for p in range(chunk_number):
+    start = p * chunk_num_datapoints
+    end = start + chunk_num_datapoints
+    chunk_data_rms_spl = rms_spl(audio_file[start:end],30)
+    spls[p] = chunk_data_rms_spl
 
-for p in range(chunk_number)
-'''
-for i in range(len(windowStart)):
-'''
+end_time2 = time.time()
+
+print(start_time2-end_time2)
+print((start_time2-end_time2)/chunk_number)
+
 
 #time F0 (in Blocks)
 timef0 = np.zeros(len(f0))
+timespl = timef0
 for i in range (len(f0)):
     timef0[i] = i
 
@@ -75,6 +83,7 @@ number_chunks = len(audio_file) // samples_per_cs
 CPP_values = np.empty(number_chunks)
 for i in range (number_chunks):
     if (((i+1)* samples_per_cs + 1) <= len(audio_file)):
+        start_time3 = time.time()
         start_point = i * samples_per_cs
         end_point = (i+1)* samples_per_cs 
         sample = audio_file[start_point:end_point]
@@ -100,6 +109,8 @@ for i in range (number_chunks):
         Cbaseline = m*(CmaxIndex)+b
         P = Cmax - Cbaseline    
         CPP_values[i] = P
+        end_time3 = time.time()
+        print(end_time3-start_time3)
         #Nudelman
     else :
         start_point = i * samples_per_cs
@@ -129,6 +140,9 @@ for i in range (number_chunks):
         P = Cmax - Cbaseline   
         CPP_values[i] = P
 timeCPP = np.zeros(len(CPP_values))
+print(start_time3-end_time3)
+print((start_time3-end_time3)/number_chunks)
+
 for i in range (len(CPP_values)):
     timeCPP[i] = i
 plt.plot(CPP_values)
@@ -146,6 +160,8 @@ async def websocket_endpoint(websocket: WebSocket):
     data = { #to list 
         "f0": f0.tolist(),  
         "timef0": timef0.tolist(),  
+        "spls": spls.tolist(),
+        "timespl": timespl.tolist(),
         "CPP": CPP_values.tolist(),   
         "timeCPP": timeCPP.tolist(),  
     }
