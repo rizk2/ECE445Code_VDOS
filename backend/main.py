@@ -11,8 +11,11 @@ import time
 
 
 app = FastAPI()
-audio_file, samplefreq = sf.read("C:\\Users\\mrizk\\Downloads\\sentence.wav")
-#print(samplefreq)
+try:
+    audio_file, samplefreq = sf.read("C:\\Users\\mrizk\\Downloads\\sentence.wav")
+except:
+    samplefreq = 8000
+    audio_file = np.random.uniform(-1, 1, samplefreq)
 
 male = True
 #It is important to distinguish possible MIN/MAX for male and female. Implement later
