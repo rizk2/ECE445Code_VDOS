@@ -37,7 +37,7 @@ pitch = sound.to_pitch(chunk_size, 85, 255) # Autocorrelation, 50 ms time blocks
 f0 = pitch.selected_array["frequency"]
 end_time = time.time()
 
-print (start_time-end_time)
+#print (start_time-end_time)
 
 #SPL
 
@@ -61,8 +61,8 @@ for p in range(chunk_number):
 
 end_time2 = time.time()
 
-print(start_time2-end_time2)
-print((start_time2-end_time2)/chunk_number)
+#print(start_time2-end_time2)
+#print((start_time2-end_time2)/chunk_number)
 
 
 #time F0 (in Blocks)
@@ -75,7 +75,7 @@ plt.plot(f0)
 plt.title('Frequency Plot')
 plt.xlabel('Time')
 plt.ylabel('Frequency')
-plt.show()
+#plt.show()
 
 #Harmonic Spacing
 
@@ -143,8 +143,8 @@ for i in range (number_chunks):
         P = Cmax - Cbaseline   
         CPP_values[i] = P
 timeCPP = np.zeros(len(CPP_values))
-print(start_time3-end_time3)
-print((start_time3-end_time3)/number_chunks)
+#print(start_time3-end_time3)
+#print((start_time3-end_time3)/number_chunks)
 
 for i in range (len(CPP_values)):
     timeCPP[i] = i
@@ -152,7 +152,7 @@ plt.plot(CPP_values)
 plt.title('CPP_values')
 plt.xlabel('TIme Chunk (50ms)')
 plt.ylabel('Magnitude')
-plt.show()
+#plt.show()
 
 
 
