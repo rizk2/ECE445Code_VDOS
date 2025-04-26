@@ -12,7 +12,7 @@
 
 # Prerequisites
 
-Python (tested on python 3.11):
+Python (tested on python 3.13):
 uvicorn, librosa, numpy, parselmouth, soundfile, matplotlib, fastapi
 
 Javascript: react, npm, plotly
