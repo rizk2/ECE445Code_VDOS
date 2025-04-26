@@ -8,6 +8,7 @@ from fastapi import FastAPI, WebSocket
 import asyncio
 import json
 import time 
+from audiohelpers import getPitch, rms_spl, getSPL, getCPP
 
 
 app = FastAPI()
@@ -16,7 +17,8 @@ try:
 except:
     samplefreq = 8000
     audio_data = np.random.uniform(-1, 1, samplefreq)
-#print(samplefreq)
+
+audio_data_p = audio_data.copy()
 
 male = True
 #It is important to distinguish possible MIN/MAX for male and female. Implement later
@@ -30,47 +32,24 @@ else :
 f0p = None 
 CPPp_values = None 
 chunk_size = 0.050 #Uniform throughout all of the measurements here
+chunk_samples = int(chunk_size*samplefreq)
 
 start_time = time.time()
 #Fundamental Frequency / Pitch Calculation 
-sound = parselmouth.Sound(audio_data, samplefreq)
-pitch = sound.to_pitch(chunk_size, 85, 255) # Autocorrelation, 50 ms time blocks
-f0 = pitch.selected_array["frequency"]
+f0 = getPitch(audio_data, samplefreq)
+timef0 = np.arange(len(f0))
 end_time = time.time()
 
 #print (start_time-end_time)
 
 #SPL
-
 start_time2 = time.time()
-C = 50 #in dB. THis is what they used in Nudelman's code. Pretty sure this is just a calibration constant
-time_length = len(audio_data) * (1/samplefreq)
-chunk_number = math.floor(time_length/chunk_size)
-chunk_num_datapoints = math.floor(len(audio_data)/chunk_number)
-spls = np.empty(chunk_number)
-
-def rms_spl(audio_bin, calibration):
-    audio_rms = np.sqrt(np.mean(audio_bin**2))
-    spl_bin = 20*np.log10(audio_rms/ (20 * 10**-5)) + calibration
-    return spl_bin
-
-for p in range(chunk_number):
-    start = p * chunk_num_datapoints
-    end = start + chunk_num_datapoints
-    chunk_data_rms_spl = rms_spl(audio_data[start:end],30)
-    spls[p] = chunk_data_rms_spl
-
+spls = getSPL(audio_data, samplefreq)
+timespl = np.arange(len(spls))
 end_time2 = time.time()
 
 #print(start_time2-end_time2)
 #print((start_time2-end_time2)/chunk_number)
-
-
-#time F0 (in Blocks)
-timef0 = np.zeros(len(f0))
-timespl = timef0
-for i in range (len(f0)):
-    timef0[i] = i
 
 plt.plot(f0)
 plt.title('Frequency Plot')
@@ -82,89 +61,24 @@ plt.ylabel('Frequency')
 
 #CPP Calculation 
  #Getting CPP for every 50 ms chunk
-samples_per_cs = round(samplefreq*chunk_size)
-number_chunks = len(audio_data) // samples_per_cs
-CPP_values = np.empty(number_chunks)
-for i in range (number_chunks):
-    if (((i+1)* samples_per_cs + 1) <= len(audio_data)):
-        start_time3 = time.time()
-        start_point = i * samples_per_cs
-        end_point = (i+1)* samples_per_cs 
-        sample = audio_data[start_point:end_point]
-        C = np.fft.fft(sample,2**13)
-        C = abs(C)
-        C = np.convolve(C, [0.5,1,0.5]) #Smoothing Filter
-        for j in range (len(C)):
-            if (C[j] == 0):
-                C[j] = 1e-15
-        C = np.log(C)
-        C = np.fft.ifft(C)
-        for j in range (len(C)):
-            if (C[j] == 0):
-                C[j] = 1e-15
-        C = 20*np.log10(np.abs([x if x != 0 else 1e-15 for x in C]))
-        tRange = [np.ceil(samplefreq/f0_max),np.floor(samplefreq/f0_min)+1]
-        tRange = [int(tRange[0]),int(min(2**12,tRange[1]))]
-        CRange = C[tRange[0]:tRange[1]]
-        Cmax = max(CRange)
-        CmaxIndex = np.argmax(CRange)
-        R = np.column_stack((np.arange(len(CRange)), np.ones_like(CRange)))
-        m, b = np.linalg.lstsq(R, CRange)[0]   
-        Cbaseline = m*(CmaxIndex)+b
-        P = Cmax - Cbaseline    
-        CPP_values[i] = P
-        end_time3 = time.time()
-        #print(end_time3-start_time3)
-        #Nudelman
-    else :
-        start_point = i * samples_per_cs
-        end_point = len(audio_data)
-        sample = audio_data[start_point:end_point]
-        C = np.fft.fft(sample,2**13)
-        C = abs(C)
-        C = np.convolve(C, [0.5,1,0.5]) #Smoothing Filter
-        for j in range (len(C)):
-            if (C[j] == 0):
-                C[j] = 1e-15
-        C = np.log(C)
-        C = np.fft.ifft(C)
-        for j in range (len(C)):
-            if (C[j] == 0):
-                C[j] = 1e-15
-        C = 20*np.log10(np.abs([x if x != 0 else 1e-15 for x in C]))
-        CPP_values[i] = np.max(C)
-        tRange = [np.ceil(samplefreq/f0_max),np.floor(samplefreq/f0_min)+1]
-        tRange = [int(tRange[0]),int(min(2**12,tRange[1]))]
-        CRange = C[tRange[0]:tRange[1]]
-        Cmax = max(CRange)
-        CmaxIndex = np.argmax(CRange)       
-        R = np.column_stack((np.arange(len(CRange)), np.ones_like(CRange)))
-        m, b = np.linalg.lstsq(R, CRange)[0]    
-        Cbaseline = m*(CmaxIndex)+b
-        P = Cmax - Cbaseline   
-        CPP_values[i] = P
-timeCPP = np.zeros(len(CPP_values))
+CPP_values = getCPP(audio_data, samplefreq, f0_min, f0_max)
+timeCPP = np.arange(len(CPP_values))
 #print(start_time3-end_time3)
 #print((start_time3-end_time3)/number_chunks)
 
-for i in range (len(CPP_values)):
-    timeCPP[i] = i
 plt.plot(CPP_values)
 plt.title('CPP_values')
 plt.xlabel('TIme Chunk (50ms)')
 plt.ylabel('Magnitude')
 #plt.show()
 
-
-
-
 @app.websocket("/ws") #protocol connect to
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     global f0, timef0, spls, timespl, CPP_values, timeCPP, audio_data
-    global f0p, CPPp_values, splsp, audio_data_p
+    global audio_data_p
     
-    '''data = { #to list 
+    data = { #to list 
         "f0": f0.tolist(), 
         "timef0": timef0.tolist(), 
         "spls": spls.tolist(), 
@@ -172,23 +86,35 @@ async def websocket_endpoint(websocket: WebSocket):
         "CPP": CPP_values.tolist(),  
         "timeCPP": timeCPP.tolist(), 
     }
-    await websocket.send_text(json.dumps(data))'''
+    await websocket.send_text(json.dumps(data))
 
-    numBlocks = 1000
+    numBlocksDisplay = 1000
     while True:
-        if (not np.array_equal(f0,f0p) or 
-            not np.array_equal(audio_data_p,audio_data)):
-            #You only need to check audio_data vs audio_data_p. Analyze new audio data and append those to f0, CPP, and spl. 
-            f0p = f0.copy()
+        if (not np.array_equal(audio_data_p,audio_data)):
+            #You only need to check if there is new audio data vs audio data p.
+            # Analyze new audio data and append those to f0, CPP, and spl. 
+            new_audio = audio_data[len(audio_data_p):]
+            audio_data_p = audio_data.copy()
+            f0 = np.append(f0, getPitch(new_audio, samplefreq))
+            spls = np.append(spls, getSPL(new_audio, samplefreq))
+            CPP_values = np.append(CPP_values, getCPP(new_audio, samplefreq, f0_min, f0_max))
+
+            timef0 = np.arange(len(f0))
+            timespl = np.arange(len(spls))
+            timeCPP = np.arange(len(CPP_values))
+            
             data = { #to list 
-                "f0": f0[-numBlocks:].tolist(), 
-                "timef0": timef0[-numBlocks:].tolist(),  
-                "spls": spls[-numBlocks:].tolist(),
-                "timespl": timespl[-numBlocks:].tolist(),
-                "CPP": CPP_values[-numBlocks:].tolist(),   
-                "timeCPP": timeCPP[-numBlocks:].tolist(),  
+                "f0": f0[-numBlocksDisplay:].tolist(), 
+                "timef0": timef0[-numBlocksDisplay:].tolist(),  
+                "spls": spls[-numBlocksDisplay:].tolist(),
+                "timespl": timespl[-numBlocksDisplay:].tolist(),
+                "CPP": CPP_values[-numBlocksDisplay:].tolist(),   
+                "timeCPP": timeCPP[-numBlocksDisplay:].tolist(),  
             }
             await websocket.send_text(json.dumps(data))
-        await asyncio.sleep(.05)
-        f0 = np.append(f0, np.random.uniform(-1, 1, 1))
-        timef0 = np.arange(len(f0))    
+        
+        #Simulated audio data
+        await asyncio.sleep(chunk_size)
+        sinefreq = np.random.uniform(100, 400)
+        sinewave = np.sin(np.arange(chunk_samples*30)/samplefreq*sinefreq*2*np.pi)
+        audio_data = np.append(audio_data, sinewave)

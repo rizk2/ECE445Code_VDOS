@@ -161,7 +161,14 @@ function App() {
         )}
       </div>
 
-      <div>
+      <div
+      style={{
+        marginBottom: "2rem",
+        padding: "1rem",
+        border: "1px solid #ccc",
+        borderRadius: "8px",
+      }}>
+        
       <h2>Start and Stop</h2>
         <button onClick={startLive} style={{ marginBottom: "1rem" }}>
           Start Live Analysis
