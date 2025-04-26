@@ -17,7 +17,6 @@ function App() {
 
   useEffect(() => {
     const socket = new WebSocket("ws://localhost:8000/ws");
-
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
 
@@ -37,8 +36,9 @@ function App() {
       }
     };
 
-    return () => socket.close();
+    //return () => socket.close();
   }, []);
+  
 
   const handleDisconnection = (event) => {
     const device = event.target;
@@ -53,6 +53,39 @@ function App() {
         acceptAllDevices: true,
       });
       setDevices([device]);
+    } catch (error) {
+      console.log("Cancelled device selection");
+    }
+  };
+
+  const startLive = async () => {
+    try {
+      /*socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+  
+        if (data.f0 && data.timef0) {
+          setTimeF0(data.timef0);
+          setF0Data(data.f0);
+        }
+  
+        if (data.CPP && data.timeCPP) {
+          setTimeCPP(data.timeCPP);
+          setCPPData(data.CPP);
+        }
+  
+        if (data.spls && data.timespl) {
+          setTimeSPL(data.timespl);
+          setSPLData(data.spls);
+        }
+      };*/
+    } catch (error) {
+      console.log("Start Live Error");
+    }
+  };
+
+  const stopLive = async () => {
+    try {
+      //socket.close();
     } catch (error) {
       console.log("Canceled device selection");
     }
@@ -127,6 +160,18 @@ function App() {
           </div>
         )}
       </div>
+
+      <div>
+      <h2>Start and Stop</h2>
+        <button onClick={startLive} style={{ marginBottom: "1rem" }}>
+          Start Live Analysis
+        </button>
+        <button onClick={stopLive} style={{ marginBottom: "1rem" }}>
+          Stop Live Analysis
+        </button>
+      </div>
+
+
 
       {/* Plots */}
       <Plot
