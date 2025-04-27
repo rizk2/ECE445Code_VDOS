@@ -7,7 +7,7 @@ import math
 chunk_size = 0.05
 def getPitch(audio_data, samplefreq):
     sound = parselmouth.Sound(audio_data, samplefreq)
-    pitch = sound.to_pitch(chunk_size, 85, 255) # Autocorrelation, 50 ms time blocks
+    pitch = sound.to_pitch(chunk_size, 50, 400) # Autocorrelation, 50 ms time blocks
     return pitch.selected_array["frequency"]
 
 def rms_spl(audio_bin, calibration):
@@ -17,6 +17,7 @@ def rms_spl(audio_bin, calibration):
 
 def getSPL(audio_data, samplefreq):
     C = 50 #in dB. THis is what they used in Nudelman's code. Pretty sure this is just a calibration constant
+    C = 30
     time_length = len(audio_data) * (1/samplefreq)
     chunk_number = math.floor(time_length/chunk_size)
     chunk_num_datapoints = math.floor(len(audio_data)/chunk_number)
@@ -25,7 +26,7 @@ def getSPL(audio_data, samplefreq):
     for p in range(chunk_number):
         start = p * chunk_num_datapoints
         end = start + chunk_num_datapoints
-        chunk_data_rms_spl = rms_spl(audio_data[start:end],30)
+        chunk_data_rms_spl = rms_spl(audio_data[start:end],C)
         spls[p] = chunk_data_rms_spl
     return spls
 
