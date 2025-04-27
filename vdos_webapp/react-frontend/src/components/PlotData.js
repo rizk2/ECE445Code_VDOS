@@ -80,6 +80,27 @@ function PlotData() {
 
     return (
         <div>
+            {/* Third Plot: Sound Pressure Level */}
+            <Plot 
+                key='spl-plot'
+                data={[
+                    {
+                    x: timeSPL,
+                    y: SPLData,
+                    type: "scatter",
+                    mode: "lines+markers",
+                    marker: { color: "orange" },
+                    },
+                ]}
+                layout={{
+                    title: { text: "Sound Pressure Level (SPL)" },
+                    xaxis: { title: { text: "Time Bins (50ms)" } },
+                    yaxis: { title: { text: "Magnitude (dB)" } },
+                    width: 1500,
+                    height: 500,
+                }}
+            />
+
             {/* First Plot: Fundamental Frequency */}
             <Plot 
                 key='f0-plot'
@@ -122,27 +143,7 @@ function PlotData() {
                     height: 500,
                 }}
             />
-
-            {/* Third Plot: Sound Pressure Level */}
-            <Plot 
-                key='spl-plot'
-                data={[
-                    {
-                    x: timeSPL,
-                    y: SPLData,
-                    type: "scatter",
-                    mode: "lines+markers",
-                    marker: { color: "orange" },
-                    },
-                ]}
-                layout={{
-                    title: { text: "Sound Pressure Level (SPL)" },
-                    xaxis: { title: { text: "Time Bins (50ms)" } },
-                    yaxis: { title: { text: "Magnitude" } },
-                    width: 1500,
-                    height: 500,
-                }}
-            />
+            
         </div>
     );
 }

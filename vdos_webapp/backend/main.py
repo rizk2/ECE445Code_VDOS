@@ -3,6 +3,8 @@ import numpy as np
 import parselmouth
 import math
 import json
+import io
+import soundfile as sf
 
 import asyncio
 import bleak as ble
@@ -14,12 +16,13 @@ from ble_helpers import subscribe_to_characteristic, unsubscribe_from_characteri
 
 from fastapi import FastAPI, HTTPException, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 
 app = FastAPI()
 live_websocket = None
 
 # Define the global variables for audio data and parameters
-samplefreq = 8000
+samplefreq = 7812
 audio_data = np.random.uniform(-1, 1, samplefreq)
 
 audio_data_p = audio_data.copy()
@@ -43,6 +46,7 @@ spls = getSPL(audio_data, samplefreq)
 timespl = np.arange(len(spls))
 CPP_values = np.array([getCPP(audio_data, samplefreq, f0_min, f0_max, 2**15)])
 timeCPP = np.arange(len(CPP_values))
+calibration_constant = 30.0
 
 
 
@@ -71,6 +75,15 @@ async def control_live_transmission(request: LiveControlRequest):
         return {"message": "Backend live data transmission started..."}
     else:
         return {"message": "Backend live data transmission stopped..."}
+
+@app.post("/set-calibration-constant")
+async def set_calibration_constant(request: dict):
+    global calibration_constant
+    try:
+        calibration_constant = request['calibration_constant']
+        return {"message": f"Calibration constant set to {calibration_constant}."}
+    except KeyError:
+        raise HTTPException(status_code=400, detail="Missing 'calibration_constant' in request body")
     
     
 @app.post("/reset-audio-data")
@@ -86,6 +99,29 @@ async def reset_audio_data():
     timeCPP = np.array([])
     
     return {"message": "Audio data reset successfully."}
+
+@app.post("/download-audio-file")
+async def download_audio_file():
+    global audio_data, samplefreq
+    try:
+        # Validate audio data
+        if audio_data.size == 0:
+            raise HTTPException(status_code=400, detail="Audio data is empty")
+
+        # Create an in-memory buffer to store the .wav file
+        buffer = io.BytesIO()
+        sf.write(buffer, audio_data, samplefreq, format="WAV")
+        buffer.seek(0)  # Reset the buffer's position to the beginning
+
+        # Return the .wav file as a downloadable response
+        return StreamingResponse(
+            buffer,
+            media_type="audio/wav",
+            headers={"Content-Disposition": "attachment; filename=audio_file.wav"}
+        )
+    except Exception as e:
+        print(f"Error in download_audio_file: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate audio file: {str(e)}")
 
 
 MAX_AUDIO_DATA_SIZE = 8000
@@ -114,7 +150,7 @@ def notification_handler_wrapper(sender, data):
 @app.websocket("/live-data")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    global f0, timef0, spls, timespl, CPP_values, timeCPP, audio_data
+    global f0, timef0, spls, timespl, CPP_values, timeCPP, audio_data, calibration_constant
     global audio_data_p, live_transmission
     global live_websocket
     
@@ -144,7 +180,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 new_audio = audio_data[len(audio_data_p):]
                 audio_data_p = audio_data.copy()
                 f0 = np.append(f0, getPitch(new_audio, samplefreq))
-                spls = np.append(spls, getSPL(new_audio, samplefreq))
+                spls = np.append(spls, getSPL(new_audio, samplefreq, calibration=calibration_constant))
                 CPP_values = np.append(CPP_values, np.array([getCPP(new_audio, samplefreq, f0_min, f0_max, 2**15)]))
                 """ audio_data_p = audio_data.copy()
                 f0 = np.append(f0, audio_data_p)

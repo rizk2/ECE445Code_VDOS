@@ -1,9 +1,11 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { LiveContext } from "./LiveContext";
 
 
 function StartStopLive() {
     const [isLive, setIsLive] = useContext(LiveContext); // State to manage live data streaming status
+    const [selectedDirectory, setSelectedDirectory] = useState(null); // State to store the selected directory handle
+    const [selectedDirectoryPath, setSelectedDirectoryPath] = useState("/Users/jadenli/Downloads"); // State to store the full directory path
 
     useEffect(() => {
         console.log("isLive state changed:", isLive);
@@ -65,6 +67,35 @@ function StartStopLive() {
     };
 
 
+    const downloadAudioFile = async () => {
+        console.log("Downloading audio file...");
+        try {
+            const response = await fetch("http://127.0.0.1:8000/download-audio-file", {
+                method: "POST",
+            });
+    
+            if (!response.ok) {
+                throw new Error("Failed to download audio file");
+            }
+    
+            // Create a blob from the response
+            const blob = await response.blob();
+    
+            // Create a link element and trigger the download
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "audio_file.wav"; // Set the file name
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a); // Clean up the link element
+            console.log("Audio file downloaded successfully.");
+        } catch (error) {
+            console.error("Error downloading audio file:", error);
+            alert("Failed to download audio file. Please try again.");
+        }
+    };
+    
 
     // Render the buttons to start and stop live data streaming
     return (
@@ -79,6 +110,13 @@ function StartStopLive() {
 
             <button onClick={clearPlots}>
                 Clear Plots
+            </button>
+
+            <br />
+            <br />
+
+            <button onClick={downloadAudioFile}>
+                Save Audio File
             </button>
         </div>
     );

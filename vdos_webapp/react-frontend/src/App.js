@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
 import { LiveProvider } from "./components/LiveContext";
 import BluetoothConnection from "./components/BluetoothConnection";
+import CalibrationSettings from "./components/CalibrationSettings";
 import StartStopLive from "./components/StartStopLive";
 import PlotData from "./components/PlotData";
 // App.js
@@ -23,6 +23,8 @@ function App() {
       >Voice Dosimeter Sample Results</h1>
 
       <BluetoothConnection />
+
+      <CalibrationSettings />
       
       {/*The LiveProvider is used to provide a shared variable between the plotter and the buttons*/}
       <LiveProvider>  

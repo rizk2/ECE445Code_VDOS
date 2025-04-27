@@ -54,6 +54,13 @@
   border-radius: 8px;
 }
 
+#calibration-section {
+  margin: 2rem;
+  padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
 #start-stop-live-section {
   margin: 2rem;
   padding: 1rem;
