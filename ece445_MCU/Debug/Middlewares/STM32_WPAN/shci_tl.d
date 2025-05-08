@@ -1,0 +1,14 @@
+Middlewares/STM32_WPAN/shci_tl.o: \
+ /Users/davidgong/STM32Cube/Repository/STM32Cube_FW_WB_V1.22.1/Middlewares/ST/STM32_WPAN/interface/patterns/ble_thread/tl/shci_tl.c \
+ /Users/davidgong/STM32Cube/Repository/STM32Cube_FW_WB_V1.22.1/Middlewares/ST/STM32_WPAN/stm32_wpan_common.h \
+ /Users/davidgong/STM32Cube/Repository/STM32Cube_FW_WB_V1.22.1/Drivers/CMSIS/Include/cmsis_compiler.h \
+ /Users/davidgong/STM32Cube/Repository/STM32Cube_FW_WB_V1.22.1/Drivers/CMSIS/Include/cmsis_gcc.h \
+ /Users/davidgong/STM32Cube/Repository/STM32Cube_FW_WB_V1.22.1/Middlewares/ST/STM32_WPAN/utilities/stm_list.h \
+ /Users/davidgong/STM32Cube/Repository/STM32Cube_FW_WB_V1.22.1/Middlewares/ST/STM32_WPAN/interface/patterns/ble_thread/tl/shci_tl.h \
+ /Users/davidgong/STM32Cube/Repository/STM32Cube_FW_WB_V1.22.1/Middlewares/ST/STM32_WPAN/interface/patterns/ble_thread/tl/tl.h
+/Users/davidgong/STM32Cube/Repository/STM32Cube_FW_WB_V1.22.1/Middlewares/ST/STM32_WPAN/stm32_wpan_common.h:
+/Users/davidgong/STM32Cube/Repository/STM32Cube_FW_WB_V1.22.1/Drivers/CMSIS/Include/cmsis_compiler.h:
+/Users/davidgong/STM32Cube/Repository/STM32Cube_FW_WB_V1.22.1/Drivers/CMSIS/Include/cmsis_gcc.h:
+/Users/davidgong/STM32Cube/Repository/STM32Cube_FW_WB_V1.22.1/Middlewares/ST/STM32_WPAN/utilities/stm_list.h:
+/Users/davidgong/STM32Cube/Repository/STM32Cube_FW_WB_V1.22.1/Middlewares/ST/STM32_WPAN/interface/patterns/ble_thread/tl/shci_tl.h:
+/Users/davidgong/STM32Cube/Repository/STM32Cube_FW_WB_V1.22.1/Middlewares/ST/STM32_WPAN/interface/patterns/ble_thread/tl/tl.h:

@@ -1,0 +1,8 @@
+../Core/Src/qspi.c:10:19:QSPI_readStatus	6
+../Core/Src/qspi.c:39:19:QSPI_unlockBlocks	2
+../Core/Src/qspi.c:57:19:QSPI_reset	1
+../Core/Src/qspi.c:68:19:QSPI_readID	2
+../Core/Src/qspi.c:83:19:QSPI_writeEnable	1
+../Core/Src/qspi.c:94:19:QSPI_program	5
+../Core/Src/qspi.c:126:19:QSPI_blockErase	3
+../Core/Src/qspi.c:148:19:QSPI_readPage	4

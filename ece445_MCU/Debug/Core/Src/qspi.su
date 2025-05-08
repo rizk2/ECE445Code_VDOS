@@ -1,0 +1,8 @@
+../Core/Src/qspi.c:10:19:QSPI_readStatus	72	static
+../Core/Src/qspi.c:39:19:QSPI_unlockBlocks	80	static
+../Core/Src/qspi.c:57:19:QSPI_reset	72	static
+../Core/Src/qspi.c:68:19:QSPI_readID	72	static
+../Core/Src/qspi.c:83:19:QSPI_writeEnable	72	static
+../Core/Src/qspi.c:94:19:QSPI_program	80	static
+../Core/Src/qspi.c:126:19:QSPI_blockErase	72	static
+../Core/Src/qspi.c:148:19:QSPI_readPage	80	static
